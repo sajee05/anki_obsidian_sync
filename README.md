@@ -6,6 +6,10 @@
 
 [Link to Demo GIF](demo.gif)
 
+<iframe width="560" height="315" src="https://www.youtube.com/embed/LcsV0cqd-6Y" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+[Link to YouTube Demo](https://youtu.be/LcsV0cqd-6Y)
+
 Let me know if you need an even more elaborate and step-by-step demonstration of how to get this working. If things are still not clear after reading these README instructions, I will create a proper video tutorial for ya'll.
 
 ## The Problem: Flashcards Adrift, Notes Disconnected
