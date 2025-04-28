@@ -1,4 +1,6 @@
-# Anki ⇌ Obsidian Sync: Bridge Your Flashcards and Notes!
+# Obsidian Sync (Differential) By M Saajeel ⭐ : Anki ⇌ Obsidian Sync: Bridge Your Flashcards and Notes!
+
+<a href="https://ankiweb.net/shared/info/1162061440?cb=1745843664504" target="_blank" style="display: inline-block; padding: 10px 20px; font-size: 16px; font-weight: bold; color: white; background-color: #007bff; text-align: center; border-radius: 5px; text-decoration: none;">Get it on AnkiWeb</a>
 
 ## Demonstration
 
@@ -6,11 +8,7 @@
 
 [Link to Demo GIF](demo.gif)
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/LcsV0cqd-6Y" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-
 [Link to YouTube Demo](https://youtu.be/LcsV0cqd-6Y)
-
-Let me know if you need an even more elaborate and step-by-step demonstration of how to get this working. If things are still not clear after reading these README instructions, I will create a proper video tutorial for ya'll.
 
 ## The Problem: Flashcards Adrift, Notes Disconnected
 
@@ -82,6 +80,8 @@ This addon shines when you're creating flashcards from source material like book
 4. **Contextual Review:** Later, when a card pops up in Anki and you feel unsure, glance at the filename (which includes the title and Note ID). Quickly search for this filename or ID in Obsidian to instantly pull up the note and its surrounding context, links, and your additional thoughts. No more context switching or losing the thread!
 
 ---
+
+Let me know if you need an even more elaborate and step-by-step demonstration of how to get this working. If things are still not clear after reading these README instructions, I will create a proper video tutorial for ya'll.
 
 Made with Passion by Mohd Sajeel Memon.
 Enjoy bridging the gap between spaced repetition and networked thought!
