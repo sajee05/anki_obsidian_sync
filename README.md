@@ -2,8 +2,10 @@
 
 ## Demonstration
 
-![Demonstration GIF](file://C:\Users\FO\AppData\Roaming\Anki2\addons21\anki_obsidian_sync\demo.gif?msec=1745840558512)
+![Demonstration GIF](demo.gif)
+
 [Link to Demo GIF](demo.gif)
+
 Let me know if you need an even more elaborate and step-by-step demonstration of how to get this working. If things are still not clear after reading these README instructions, I will create a proper video tutorial for ya'll.
 
 ## The Problem: Flashcards Adrift, Notes Disconnected
