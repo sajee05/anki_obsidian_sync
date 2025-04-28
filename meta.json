@@ -1,0 +1,10 @@
+{
+    "name": "Obsidian Sync (Differential) by M Saajeel ⭐",
+    "version": "0.1.0",
+    "description": "Differentially syncs Anki decks and cards to a specified Obsidian vault folder, creating Markdown files and MOCs.",
+    "author": "Mohd Sajeel Memon",
+    "support_url": "",
+    "homepage_url": "",
+    "package": "anki_obsidian_sync",
+    "anki_version_minimum": "2.1.49"
+}
