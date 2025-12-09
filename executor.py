@@ -86,20 +86,30 @@ def execute_deletions_and_folders(actions: Dict[str, Any], obsidian_base_path: P
 
 # --- Phase 4: Content Conversion & File Writing (Note-Centric) ---
 # (No changes needed here)
-def copy_required_images(
-    required_images: Set[str], images_to_copy_set: Set[str],
+def copy_required_media(
+    required_media: Set[str], media_to_copy_set: Set[str],
     anki_media_path: str, obsidian_assets_path: Path ):
-    if not required_images: return
+    """Copies all required media files (images, audio, video, etc.) to Obsidian assets folder."""
+    if not required_media: return
     ensure_dir_exists(obsidian_assets_path)
-    for img_filename in required_images:
-        if img_filename not in images_to_copy_set: continue
-        source_path = Path(anki_media_path) / img_filename; dest_path = obsidian_assets_path / img_filename
+    for media_filename in required_media:
+        if media_filename not in media_to_copy_set: continue
+        source_path = Path(anki_media_path) / media_filename
+        dest_path = obsidian_assets_path / media_filename
         if source_path.is_file():
             if not dest_path.exists():
-                try: shutil.copy2(source_path, dest_path)
-                except Exception as e: print(f"Error copying image {img_filename}: {e}")
-            images_to_copy_set.discard(img_filename)
-        else: print(f"Warning: Source image not found in Anki media: {source_path}"); images_to_copy_set.discard(img_filename)
+                try: 
+                    shutil.copy2(source_path, dest_path)
+                    print(f"Copied media file: {media_filename}")
+                except Exception as e: 
+                    print(f"Error copying media {media_filename}: {e}")
+            media_to_copy_set.discard(media_filename)
+        else: 
+            print(f"Warning: Source media not found in Anki media: {source_path}")
+            media_to_copy_set.discard(media_filename)
+
+# Backwards compatibility alias
+copy_required_images = copy_required_media
 
 def calculate_content_hash(content: str) -> str: return hashlib.md5(content.encode('utf-8')).hexdigest()
 
@@ -121,7 +131,7 @@ def execute_note_writes(
         if "obs_note_data" in note_action and note_action.get("needs_move", False):
             old_rel_path = note_action["obs_note_data"]["obs_rel_path"]; old_abs_path = obsidian_base_path / old_rel_path
             print(f"DEBUG: Note {note_id} needs move from {old_rel_path} to {target_rel_path}")
-        copy_required_images(required_images, images_to_copy_set, anki_media_path, obsidian_assets_abs_path)
+        copy_required_media(required_images, images_to_copy_set, anki_media_path, obsidian_assets_abs_path)
         markdown_body = combine_fields_to_markdown(fields, note_type_name, note_id)
         content_hash = calculate_content_hash(markdown_body)
         frontmatter_dict = {"anki_note_id": note_id, "anki_note_mod": anki_note_data["note_mod_time"], "content_hash": content_hash}

@@ -50,17 +50,50 @@ def sanitize_filename(name: str) -> str:
     final_name = sanitized or "anki_note"
     return final_name
 
-def get_note_images(note: Note) -> Set[str]:
-    """Extracts image filenames referenced in a note's fields."""
-    images = set()
+def get_note_media(note: Note) -> Set[str]:
+    """Extracts all media filenames (images, audio, video, GIFs) referenced in a note's fields."""
+    media = set()
+    
+    # Regular expressions for different media types
     img_regex = re.compile(r'<img.*?src=["\'](.*?)["\']', re.IGNORECASE)
+    audio_regex = re.compile(r'\[sound:([^\]]+)\]', re.IGNORECASE)
+    video_regex = re.compile(r'<video.*?src=["\'](.*?)["\']', re.IGNORECASE | re.DOTALL)
+    # Also check for webp and other image formats in various contexts
+    paste_img_regex = re.compile(r'(paste-[a-f0-9]+\.(?:jpg|jpeg|png|gif|webp|svg))', re.IGNORECASE)
+    general_media_regex = re.compile(r'src=["\'](.*?\.(?:jpg|jpeg|png|gif|webp|svg|mp3|mp4|wav|ogg|webm))["\']', re.IGNORECASE)
+    
     for field_name, field_value in note.items():
         if field_value:
+            # Extract images
             for match in img_regex.finditer(field_value):
                 src = match.group(1)
                 if src and not src.startswith(('http:', 'https:', 'data:')):
-                    images.add(src)
-    return images
+                    media.add(src)
+            
+            # Extract audio files
+            for match in audio_regex.finditer(field_value):
+                media.add(match.group(1))
+            
+            # Extract video files
+            for match in video_regex.finditer(field_value):
+                src = match.group(1)
+                if src and not src.startswith(('http:', 'https:', 'data:')):
+                    media.add(src)
+            
+            # Extract paste images
+            for match in paste_img_regex.finditer(field_value):
+                media.add(match.group(1))
+            
+            # Extract general media files
+            for match in general_media_regex.finditer(field_value):
+                src = match.group(1)
+                if src and not src.startswith(('http:', 'https:', 'data:')):
+                    media.add(src)
+    
+    return media
+
+# Backwards compatibility alias
+get_note_images = get_note_media
 
 # --- Anki State Building (Note-Centric) ---
 
@@ -164,12 +197,12 @@ def build_anki_state(col: Collection) -> Dict[str, Any]:
                     print(f"Warning: Skipping note {nid} due to invalid generated filename: '{target_filename}'") # DEBUG
                     notes_skipped += 1; processed_note_ids.add(nid); continue
 
-                images = get_note_images(note)
+                media_files = get_note_media(note)
                 relevant_fields = {f['name']: note[f['name']] for f in note_type['flds']}
                 anki_state[deck_path]["notes"][nid] = {
                     "note_id": nid, "card_id": card_ids[0], "note_mod_time": note.mod,
                     "note_type_name": note_type['name'], "relevant_fields": relevant_fields,
-                    "target_filename": target_filename, "required_images": images,
+                    "target_filename": target_filename, "required_images": media_files,  # Now includes all media
                     "card_ids": card_ids}
                 processed_note_ids.add(nid); notes_added += 1
             else:
