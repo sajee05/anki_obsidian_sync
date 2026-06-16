@@ -43,6 +43,7 @@ def sanitize_filename(name: str) -> str:
     return sanitized or "anki_note"
 
 def get_note_media(note: Note) -> Set[str]:
+<<<<<<< HEAD
     media = set()
     img_regex = re.compile(r'<img.*?src=["\'](.*?)["\']', re.IGNORECASE)
     audio_regex = re.compile(r'\[sound:([^\]]+)\]', re.IGNORECASE)
@@ -51,9 +52,25 @@ def get_note_media(note: Note) -> Set[str]:
     general_media_regex = re.compile(r'src=["\'](.*?\.(?:jpg|jpeg|png|gif|webp|svg|mp3|mp4|wav|ogg|webm))["\']', re.IGNORECASE)
     
     for field_value in note.values():
+=======
+    """Extracts all media filenames (images, audio, video, GIFs) referenced in a note's fields."""
+    media = set()
+    
+    # Regular expressions for different media types
+    img_regex = re.compile(r'<img.*?src=["\'](.*?)["\']', re.IGNORECASE)
+    audio_regex = re.compile(r'\[sound:([^\]]+)\]', re.IGNORECASE)
+    video_regex = re.compile(r'<video.*?src=["\'](.*?)["\']', re.IGNORECASE | re.DOTALL)
+    # Also check for webp and other image formats in various contexts
+    paste_img_regex = re.compile(r'(paste-[a-f0-9]+\.(?:jpg|jpeg|png|gif|webp|svg))', re.IGNORECASE)
+    general_media_regex = re.compile(r'src=["\'](.*?\.(?:jpg|jpeg|png|gif|webp|svg|mp3|mp4|wav|ogg|webm))["\']', re.IGNORECASE)
+    
+    for field_name, field_value in note.items():
+>>>>>>> 8413eca9f1e93d7cf1c5475af7081e74e9f08b3c
         if field_value:
+            # Extract images
             for match in img_regex.finditer(field_value):
                 src = match.group(1)
+<<<<<<< HEAD
                 if src and not src.startswith(('http:', 'https:', 'data:')): media.add(src)
             for match in audio_regex.finditer(field_value):
                 media.add(match.group(1))
@@ -66,6 +83,37 @@ def get_note_media(note: Note) -> Set[str]:
                 src = match.group(1)
                 if src and not src.startswith(('http:', 'https:', 'data:')): media.add(src)
     return media
+=======
+                if src and not src.startswith(('http:', 'https:', 'data:')):
+                    media.add(src)
+            
+            # Extract audio files
+            for match in audio_regex.finditer(field_value):
+                media.add(match.group(1))
+            
+            # Extract video files
+            for match in video_regex.finditer(field_value):
+                src = match.group(1)
+                if src and not src.startswith(('http:', 'https:', 'data:')):
+                    media.add(src)
+            
+            # Extract paste images
+            for match in paste_img_regex.finditer(field_value):
+                media.add(match.group(1))
+            
+            # Extract general media files
+            for match in general_media_regex.finditer(field_value):
+                src = match.group(1)
+                if src and not src.startswith(('http:', 'https:', 'data:')):
+                    media.add(src)
+    
+    return media
+
+# Backwards compatibility alias
+get_note_images = get_note_media
+
+# --- Anki State Building (Note-Centric) ---
+>>>>>>> 8413eca9f1e93d7cf1c5475af7081e74e9f08b3c
 
 def determine_note_filename(note: Note, note_type: Dict) -> str:
     filename_base = ""
@@ -186,11 +234,20 @@ def build_anki_state(col: Collection) -> Dict[str, Any]:
             # Only process if deck hasn't been excluded
             if deck_path and deck_path in anki_state:
                 target_filename = determine_note_filename(note, note_type)
+<<<<<<< HEAD
+=======
+                if not target_filename or target_filename == ".md":
+                    print(f"Warning: Skipping note {nid} due to invalid generated filename: '{target_filename}'") # DEBUG
+                    notes_skipped += 1; processed_note_ids.add(nid); continue
+
+                media_files = get_note_media(note)
+>>>>>>> 8413eca9f1e93d7cf1c5475af7081e74e9f08b3c
                 relevant_fields = {f['name']: note[f['name']] for f in note_type['flds']}
                 
                 anki_state[deck_path]["notes"][nid] = {
                     "note_id": nid, "card_id": card_ids[0], "note_mod_time": note.mod,
                     "note_type_name": note_type['name'], "relevant_fields": relevant_fields,
+<<<<<<< HEAD
                     "target_filename": target_filename, "required_images": get_note_media(note),
                     "card_ids": card_ids
                 }
@@ -199,6 +256,18 @@ def build_anki_state(col: Collection) -> Dict[str, Any]:
             pass
             
         if i % 100 == 0: mw.progress.update(value=i)
+=======
+                    "target_filename": target_filename, "required_images": media_files,  # Now includes all media
+                    "card_ids": card_ids}
+                processed_note_ids.add(nid); notes_added += 1
+            else:
+                original_deck_name = col.decks.name(deck_id)
+                print(f"DEBUG: Skipping note {nid} - Deck path not found or invalid. Deck ID: {deck_id}, Name: '{original_deck_name}', Mapped Path Attempt: '{deck_path}'") # DEBUG
+                notes_skipped += 1; processed_note_ids.add(nid)
+        except Exception as e: print(f"Error processing note {nid}: {e}"); notes_skipped += 1; processed_note_ids.add(nid) # Count errors as skipped too
+        notes_processed += 1
+        if notes_processed % 50 == 0: mw.progress.update(label=f"Building Anki State: {notes_processed}/{total_notes} notes", value=notes_processed)
+>>>>>>> 8413eca9f1e93d7cf1c5475af7081e74e9f08b3c
 
     mw.progress.finish()
     return anki_state
