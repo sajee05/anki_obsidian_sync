@@ -1,4 +1,21 @@
 {
-    "obsidianSyncPath": "C:/Users/FO/Downloads/test/test",
-    "excludedDecks": []
+    "obsidianSyncPath": "C:\\Users\\FO\\Documents\\GitHub\\mains-notes-repo\\mains-notes-repo\\Mains-Notes\\Anki",
+    "excludedDecks": [
+        "**daily\u2b50::00 \ud83d\udcdc Forum-Toolkit-PYQs",
+        "**daily\u2b50::00 \ud83d\udd22 CSAT",
+        "**daily\u2b50::WPME",
+        "*Insights quiz",
+        "0. \ud83d\udd24 Vocab and GS Dictionary",
+        "1. \ud83d\udcdd Prelims - 120 Marks::2. \ud83d\udcb9 Economics::Other::(suspended) Economics Conceptual clarity",
+        "1. \ud83d\udcdd Prelims - 120 Marks::2. \ud83d\udcb9 Economics::PRRC",
+        "1. \ud83d\udcdd Prelims - 120 Marks::3. \ud83c\udf0d Geography::1 Vision::1. Physical::Diagrams",
+        "1. \ud83d\udcdd Prelims - 120 Marks::3. \ud83c\udf0d Geography::1 Vision::1. Physical::Ocean Currents",
+        "1. \ud83d\udcdd Prelims - 120 Marks::3. \ud83c\udf0d Geography::3. Mapping::\ud83d\uddfa\ufe0f world map",
+        "1. \ud83d\udcdd Prelims - 120 Marks::3. \ud83c\udf0d Geography::3. Mapping::\ud83d\udea9Indian-Map",
+        "1. \ud83d\udcdd Prelims - 120 Marks::3. \ud83c\udf0d Geography::5. Pallavi Ma'am Active recall session",
+        "1. \ud83d\udcdd Prelims - 120 Marks::4. \ud83d\udd4a\ufe0f Environment::0. species::visualize species",
+        "1. \ud83d\udcdd Prelims - 120 Marks::6. \ud83d\udcd9 History::\ud83d\udcd5AMAC",
+        "2. \u270d\ufe0f Mains - 950 marks",
+        "z9 \ud83d\udcc2 misc repo unimportant"
+    ]
 }
