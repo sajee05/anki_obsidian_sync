@@ -24,7 +24,7 @@ except ImportError:
     yaml = None
     YAML_AVAILABLE = False
 
-from .config import get_excluded_decks
+from .config import get_excluded_decks, get_filename_suffix
 
 # Constants
 INVALID_FILENAME_CHARS = r'[<>:"/\\|?*\x00-\x1f]|(?<!^)\.$|\s$'
@@ -116,7 +116,23 @@ def determine_note_filename(note: Note, note_type: Dict) -> str:
         
     cleaned_text = re.sub(r'\s+', ' ', cleaned_text).strip()
     sanitized_base = sanitize_filename(cleaned_text)
-    return f"{sanitized_base}_{note.id}.md"
+
+    # Filename suffix strategy
+    suffix_type = get_filename_suffix()
+    if suffix_type == "none":
+        return f"{sanitized_base}.md"
+    elif suffix_type == "sortField":
+        raw = note.sortField or ""
+        clean = re.sub('<[^>]+>', ' ', raw).strip()
+        clean = html.unescape(clean)
+        clean = re.sub(r'\s+', ' ', clean).strip()
+        # Short, clean identifier from sort field value
+        if len(clean) > 16:
+            clean = clean[:16].rstrip()
+        sf_suffix = sanitize_filename(clean) or "untitled"
+        return f"{sanitized_base}_{sf_suffix}.md"
+    else:  # "nid" (default)
+        return f"{sanitized_base}_{note.id}.md"
 
 def build_anki_state(col: Collection) -> Dict[str, Any]:
     anki_state = {"_root_": {"anki_deck_id": None, "anki_deck_name": "Anki Collection", "notes": {}, "subdeck_paths": set(), "moc_filename": ROOT_MOC_FILENAME}}

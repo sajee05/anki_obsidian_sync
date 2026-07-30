@@ -8,12 +8,17 @@ import os
 from aqt.qt import (
     QDialog, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, 
     QPushButton, QFileDialog, QDialogButtonBox, QWidget,
-    QListWidget, QListWidgetItem, QAbstractItemView, Qt
+    QListWidget, QListWidgetItem, QAbstractItemView, Qt,
+    QComboBox
 )
 from aqt import mw
 from aqt.utils import showWarning
 
-from .config import get_obsidian_path, set_obsidian_path, get_excluded_decks, set_excluded_decks
+from .config import (
+    get_obsidian_path, set_obsidian_path,
+    get_excluded_decks, set_excluded_decks,
+    get_filename_suffix, set_filename_suffix,
+)
 
 class ConfigDialog(QDialog):
     def __init__(self, parent: QWidget = None):
@@ -33,6 +38,22 @@ class ConfigDialog(QDialog):
         path_layout.addWidget(self.path_label)
         path_layout.addWidget(self.path_edit)
         path_layout.addWidget(self.browse_button)
+
+        # --- Filename Suffix ---
+        suffix_label = QLabel("Filename Suffix:")
+        self.suffix_combo = QComboBox()
+        self.suffix_combo.addItem("nid (Anki note ID, default)", "nid")
+        self.suffix_combo.addItem("sortField (first 16 chars of sort field)", "sortField")
+        self.suffix_combo.addItem("none (title only, risk of collisions)", "none")
+        current = get_filename_suffix()
+        for i in range(self.suffix_combo.count()):
+            if self.suffix_combo.itemData(i) == current:
+                self.suffix_combo.setCurrentIndex(i)
+                break
+        suffix_layout = QHBoxLayout()
+        suffix_layout.addWidget(suffix_label)
+        suffix_layout.addWidget(self.suffix_combo)
+        suffix_layout.addStretch(1)
 
         # --- Exclude Decks List ---
         self.exclude_label = QLabel("Exclude Decks from Sync (Multi-select):")
@@ -68,6 +89,7 @@ class ConfigDialog(QDialog):
         # --- Main Layout ---
         main_layout = QVBoxLayout(self)
         main_layout.addLayout(path_layout)
+        main_layout.addLayout(suffix_layout)
         main_layout.addSpacing(10)
         main_layout.addWidget(self.exclude_label)
         main_layout.addLayout(bulk_layout)
@@ -136,6 +158,7 @@ class ConfigDialog(QDialog):
                     excluded.append(item.text())
             
             set_excluded_decks(excluded)
+            set_filename_suffix(self.suffix_combo.currentData())
             super().accept()
         else:
             showWarning("Invalid path specified. Please select a valid directory.")

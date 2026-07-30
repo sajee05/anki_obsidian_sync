@@ -12,6 +12,7 @@ from aqt import mw
 
 CONFIG_KEY_OBSIDIAN_PATH = "obsidianSyncPath"
 CONFIG_KEY_EXCLUDED_DECKS = "excludedDecks"
+CONFIG_KEY_FILENAME_SUFFIX = "filenameSuffix"
 
 def _get_addon_dir() -> Optional[str]:
     """Gets the absolute path to the addon's directory."""
@@ -76,4 +77,13 @@ def get_excluded_decks() -> List[str]:
 def set_excluded_decks(decks: List[str]):
     config = _read_config()
     config[CONFIG_KEY_EXCLUDED_DECKS] = decks
+    _write_config(config)
+
+def get_filename_suffix() -> str:
+    config = _read_config()
+    return config.get(CONFIG_KEY_FILENAME_SUFFIX, "nid")
+
+def set_filename_suffix(value: str):
+    config = _read_config()
+    config[CONFIG_KEY_FILENAME_SUFFIX] = value
     _write_config(config)
