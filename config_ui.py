@@ -38,7 +38,15 @@ class ConfigDialog(QDialog):
         self.exclude_label = QLabel("Exclude Decks from Sync (Multi-select):")
         self.deck_list = QListWidget()
         self.deck_list.setSelectionMode(QAbstractItemView.SelectionMode.MultiSelection)
-        
+
+        # --- Bulk selection buttons (全选 / 反选) ---
+        self.select_all_button = QPushButton("All")
+        self.invert_selection_button = QPushButton("Invert")
+        bulk_layout = QHBoxLayout()
+        bulk_layout.addStretch(1)
+        bulk_layout.addWidget(self.select_all_button)
+        bulk_layout.addWidget(self.invert_selection_button)
+
         if mw and mw.col:
             excluded = get_excluded_decks()
             for deck_name in sorted(mw.col.decks.all_names()):
@@ -52,7 +60,7 @@ class ConfigDialog(QDialog):
                     user_checkable = Qt.ItemIsUserCheckable
                     checked_state = Qt.Checked
                     unchecked_state = Qt.Unchecked
-                
+
                 item.setFlags(item.flags() | user_checkable)
                 item.setCheckState(checked_state if deck_name in excluded else unchecked_state)
                 self.deck_list.addItem(item)
@@ -62,6 +70,7 @@ class ConfigDialog(QDialog):
         main_layout.addLayout(path_layout)
         main_layout.addSpacing(10)
         main_layout.addWidget(self.exclude_label)
+        main_layout.addLayout(bulk_layout)
         main_layout.addWidget(self.deck_list)
         main_layout.addSpacing(10)
 
@@ -70,8 +79,38 @@ class ConfigDialog(QDialog):
 
         # --- Connections ---
         self.browse_button.clicked.connect(self.on_browse)
+        self.select_all_button.clicked.connect(self.on_select_all)
+        self.invert_selection_button.clicked.connect(self.on_invert_selection)
         self.button_box.accepted.connect(self.accept)
         self.button_box.rejected.connect(self.reject)
+
+    def _checked_state(self):
+        """Return Qt.CheckState.Checked, cross-compatible with Qt5/Qt6."""
+        try:
+            return Qt.CheckState.Checked
+        except AttributeError:
+            return Qt.Checked
+
+    def _unchecked_state(self):
+        """Return Qt.CheckState.Unchecked, cross-compatible with Qt5/Qt6."""
+        try:
+            return Qt.CheckState.Unchecked
+        except AttributeError:
+            return Qt.Unchecked
+
+    def on_select_all(self):
+        """Check every deck item in the list."""
+        checked = self._checked_state()
+        for i in range(self.deck_list.count()):
+            self.deck_list.item(i).setCheckState(checked)
+
+    def on_invert_selection(self):
+        """Invert check state for every deck item."""
+        checked = self._checked_state()
+        unchecked = self._unchecked_state()
+        for i in range(self.deck_list.count()):
+            item = self.deck_list.item(i)
+            item.setCheckState(checked if item.checkState() == unchecked else unchecked)
 
     def on_browse(self):
         start_dir = self.path_edit.text() or os.path.expanduser("~")
