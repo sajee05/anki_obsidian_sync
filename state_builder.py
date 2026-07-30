@@ -118,21 +118,24 @@ def determine_note_filename(note: Note, note_type: Dict) -> str:
     sanitized_base = sanitize_filename(cleaned_text)
 
     # Filename suffix strategy
-    suffix_type = get_filename_suffix()
-    if suffix_type == "none":
+    suffix_cfg = get_filename_suffix()
+    if suffix_cfg == "none":
         return f"{sanitized_base}.md"
-    elif suffix_type == "sortField":
-        raw = note.sortField or ""
-        clean = re.sub('<[^>]+>', ' ', raw).strip()
-        clean = html.unescape(clean)
-        clean = re.sub(r'\s+', ' ', clean).strip()
-        # Short, clean identifier from sort field value
-        if len(clean) > 16:
-            clean = clean[:16].rstrip()
-        sf_suffix = sanitize_filename(clean) or "untitled"
-        return f"{sanitized_base}_{sf_suffix}.md"
-    else:  # "nid" (default)
-        return f"{sanitized_base}_{note.id}.md"
+    elif suffix_cfg and suffix_cfg != "nid":
+        # Treat as a field name — use its value if it exists in this note type
+        fields_map = {f['name']: note[f['name']] for f in note_type['flds']}
+        raw_field = fields_map.get(suffix_cfg, "")
+        if raw_field:
+            clean = re.sub('<[^>]+>', ' ', raw_field).strip()
+            clean = html.unescape(clean)
+            clean = re.sub(r'\s+', ' ', clean).strip()
+            if len(clean) > 16:
+                clean = clean[:16].rstrip()
+            suffix = sanitize_filename(clean) or suffix_cfg
+            return f"{sanitized_base}_{suffix}.md"
+        # Field not found/empty → fall through to nid
+    # "nid" or fallback
+    return f"{sanitized_base}_{note.id}.md"
 
 def build_anki_state(col: Collection) -> Dict[str, Any]:
     anki_state = {"_root_": {"anki_deck_id": None, "anki_deck_name": "Anki Collection", "notes": {}, "subdeck_paths": set(), "moc_filename": ROOT_MOC_FILENAME}}

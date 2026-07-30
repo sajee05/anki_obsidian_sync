@@ -42,14 +42,18 @@ class ConfigDialog(QDialog):
         # --- Filename Suffix ---
         suffix_label = QLabel("Filename Suffix:")
         self.suffix_combo = QComboBox()
+        self.suffix_combo.setEditable(True)
         self.suffix_combo.addItem("nid (Anki note ID, default)", "nid")
         self.suffix_combo.addItem("sortField (first 16 chars of sort field)", "sortField")
         self.suffix_combo.addItem("none (title only, risk of collisions)", "none")
+
+        # Restore saved value (might be a custom field name)
         current = get_filename_suffix()
-        for i in range(self.suffix_combo.count()):
-            if self.suffix_combo.itemData(i) == current:
-                self.suffix_combo.setCurrentIndex(i)
-                break
+        match_idx = self.suffix_combo.findData(current)
+        if match_idx >= 0:
+            self.suffix_combo.setCurrentIndex(match_idx)
+        else:
+            self.suffix_combo.setEditText(current)
         suffix_layout = QHBoxLayout()
         suffix_layout.addWidget(suffix_label)
         suffix_layout.addWidget(self.suffix_combo)
@@ -158,7 +162,13 @@ class ConfigDialog(QDialog):
                     excluded.append(item.text())
             
             set_excluded_decks(excluded)
-            set_filename_suffix(self.suffix_combo.currentData())
+            txt = self.suffix_combo.currentText().strip()
+            # Map display text back to data value for preset items
+            for i in range(self.suffix_combo.count()):
+                if self.suffix_combo.itemText(i) == txt:
+                    txt = self.suffix_combo.itemData(i)
+                    break
+            set_filename_suffix(txt)
             super().accept()
         else:
             showWarning("Invalid path specified. Please select a valid directory.")
