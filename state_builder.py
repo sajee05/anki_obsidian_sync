@@ -180,7 +180,8 @@ def build_anki_state(col: Collection) -> Dict[str, Any]:
             card_ids = note.card_ids()
             if not card_ids: continue
             
-            deck_id = col.get_card(card_ids[0]).did
+            card0 = col.get_card(card_ids[0])
+            deck_id = card0.did
             deck_path = deck_map.get(deck_id)
 
             # Only process if deck hasn't been excluded
@@ -192,7 +193,15 @@ def build_anki_state(col: Collection) -> Dict[str, Any]:
                     "note_id": nid, "card_id": card_ids[0], "note_mod_time": note.mod,
                     "note_type_name": note_type['name'], "relevant_fields": relevant_fields,
                     "target_filename": target_filename, "required_images": get_note_media(note),
-                    "card_ids": card_ids
+                    "card_ids": card_ids,
+                    # Card scheduling metadata — read-only for now, will support write-back
+                    "tags": list(note.tags),
+                    "card_reps": card0.reps,
+                    "card_lapses": card0.lapses,
+                    "card_ivl": card0.ivl,
+                    "card_due": card0.due,
+                    "card_ease": card0.factor,
+                    "card_queue": card0.queue,
                 }
                 processed_note_ids.add(nid)
         except Exception:
