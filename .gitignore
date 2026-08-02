@@ -1,0 +1,52 @@
+# ── Editors / IDEs ──
+.vscode/
+.codebuddy/
+.trae/
+.cursor/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── Python ──
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.egg
+dist/
+build/
+*.whl
+*.manifest
+*.spec
+.eggs/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ── Virtual environments ──
+venv/
+.venv/
+env/
+.env/
+ENV/
+
+# ── Testing & Coverage ──
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.cache/
+
+# ── Mypy / type checking ──
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.typings/
+
+# ── OS junk ──
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ── Anki addon specific ──
+*.ankiaddon
+
