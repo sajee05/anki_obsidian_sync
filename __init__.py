@@ -51,16 +51,42 @@ def sync_to_obsidian():
 
         actions = calculate_diff(anki_state, obsidian_state)
         if not any(v for k, v in actions.items() if isinstance(v, (list, set)) and v):
+            deck_count = sum(1 for k in anki_state if k != "_root_")
+            card_count = sum(
+                len(note_data.get("card_ids", []))
+                for deck_data in anki_state.values()
+                if isinstance(deck_data, dict)
+                for note_data in deck_data.get("notes", {}).values()
+            )
             mw.progress.finish()
-            showInfo("Obsidian sync complete. No changes detected.")
+            showInfo(
+                f"Obsidian sync complete. No changes detected.\n\n"
+                f"Scanned {deck_count} deck(s) / {card_count} card(s)."
+            )
             return
 
         execute_deletions_and_folders(actions, obsidian_state["base_path"], assets_rel_path)
         execute_note_writes(actions, obsidian_state["base_path"], assets_rel_path)
         execute_moc_generation(actions, anki_state, obsidian_state["base_path"])
 
+        # --- Build summary statistics ---
+        deck_count = sum(1 for k in anki_state if k != "_root_")
+        card_count = sum(
+            len(note_data.get("card_ids", []))
+            for deck_data in anki_state.values()
+            if isinstance(deck_data, dict)
+            for note_data in deck_data.get("notes", {}).values()
+        )
+        notes_created = len(actions.get("notes_to_create", []))
+        notes_updated = len(actions.get("notes_to_update", []))
+        notes_deleted = len(actions.get("notes_to_delete", []))
+
         mw.progress.finish()
-        showInfo(f"Obsidian sync finished successfully in {time.time() - start_time:.2f} seconds.")
+        showInfo(
+            f"Obsidian sync finished successfully in {time.time() - start_time:.2f} seconds.\n\n"
+            f"Exported {deck_count} deck(s) / {card_count} card(s).\n"
+            f"Notes: {notes_created} created, {notes_updated} updated, {notes_deleted} deleted."
+        )
     except Exception as e:
         mw.progress.finish()
         print(traceback.format_exc())
