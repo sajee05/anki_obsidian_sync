@@ -147,17 +147,22 @@ def build_anki_state(col: Collection) -> Dict[str, Any]:
 
     def is_excluded(deck_name: str) -> bool:
         for ex in excluded_decks:
-            if deck_name == ex or deck_name.startswith(ex + "::"):
+            # Exact match: exclude only this deck (children remain exportable).
+            if deck_name == ex:
+                return True
+            # Explicit subtree wildcard "Parent::" excludes the whole subtree,
+            # but a bare "Parent" no longer blocks its subdecks.
+            if ex.endswith("::") and deck_name.startswith(ex):
                 return True
         return False
 
     for deck in all_decks:
-        if is_excluded(deck.name):
-            continue
-            
+        # Always register the deck path so notes can resolve their location,
+        # even for excluded decks (their non-excluded children still need it).
         parts = deck.name.split("::")
         current_path_parts = []
         parent_id = None
+        excluded = is_excluded(deck.name)
         
         for i, part_name in enumerate(parts):
             sanitized_part_name = sanitize_filename(part_name)
@@ -171,17 +176,21 @@ def build_anki_state(col: Collection) -> Dict[str, Any]:
                 deck_map[current_deck_id] = sanitized_path
                 if parent_id is not None: 
                     deck_parents[current_deck_id] = parent_id
-                if sanitized_path not in anki_state:
+                # Only exportable (non-excluded) decks become folders in Obsidian.
+                if not excluded and sanitized_path not in anki_state:
                      anki_state[sanitized_path] = {
                         "anki_deck_id": current_deck_id, "anki_deck_name": part_name,
                         "sanitized_deck_name": sanitized_part_name, "notes": {},
                         "subdeck_paths": set(), "moc_filename": f"_{sanitized_part_name}_index.md"}
-                if parent_id is None: 
-                    anki_state["_root_"]["subdeck_paths"].add(sanitized_path)
-                else:
-                    parent_path = deck_map.get(parent_id)
-                    if parent_path and parent_path in anki_state: 
+                # Link subdecks only between non-excluded decks. If the parent is
+                # excluded (not in anki_state), promote the deck to the root level
+                # so it stays reachable in the MOC hierarchy.
+                if not excluded:
+                    parent_path = deck_map.get(parent_id) if parent_id is not None else None
+                    if parent_path and parent_path in anki_state:
                         anki_state[parent_path]["subdeck_paths"].add(sanitized_path)
+                    else:
+                        anki_state["_root_"]["subdeck_paths"].add(sanitized_path)
                 parent_id = current_deck_id
 
     note_ids = col.find_notes("")
