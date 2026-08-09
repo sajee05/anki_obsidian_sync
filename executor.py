@@ -134,7 +134,19 @@ def execute_note_writes(
         copy_required_media(required_images, images_to_copy_set, anki_media_path, obsidian_assets_abs_path)
         markdown_body = combine_fields_to_markdown(fields, note_type_name, note_id)
         content_hash = calculate_content_hash(markdown_body)
-        frontmatter_dict = {"anki_note_id": note_id, "anki_note_mod": anki_note_data["note_mod_time"], "content_hash": content_hash}
+        frontmatter_dict = {
+            "anki_note_id": note_id,
+            "anki_card_id": anki_note_data["card_id"],
+            "anki_note_mod": anki_note_data["note_mod_time"],
+            "anki_tags": anki_note_data.get("tags", []),
+            "anki_card_reps": anki_note_data.get("card_reps", 0),
+            "anki_card_lapses": anki_note_data.get("card_lapses", 0),
+            "anki_card_ivl": anki_note_data.get("card_ivl", 0),
+            "anki_card_due": anki_note_data.get("card_due", 0),
+            "anki_card_ease": anki_note_data.get("card_ease", 0),
+            "anki_card_queue": anki_note_data.get("card_queue", 0),
+            "content_hash": content_hash,
+        }
         try:
             if not YAML_AVAILABLE: frontmatter_yaml = f"# YAML Frontmatter requires PyYAML library (missing)\n# anki_note_id: {note_id}\n"
             else: frontmatter_yaml = yaml.dump(frontmatter_dict, sort_keys=False, allow_unicode=True, default_flow_style=False)

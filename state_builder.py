@@ -24,7 +24,7 @@ except ImportError:
     yaml = None
     YAML_AVAILABLE = False
 
-from .config import get_excluded_decks
+from .config import get_excluded_decks, get_filename_suffix
 
 # Constants
 INVALID_FILENAME_CHARS = r'[<>:"/\\|?*\x00-\x1f]|(?<!^)\.$|\s$'
@@ -116,6 +116,25 @@ def determine_note_filename(note: Note, note_type: Dict) -> str:
         
     cleaned_text = re.sub(r'\s+', ' ', cleaned_text).strip()
     sanitized_base = sanitize_filename(cleaned_text)
+
+    # Filename suffix strategy
+    suffix_cfg = get_filename_suffix()
+    if suffix_cfg == "none":
+        return f"{sanitized_base}.md"
+    elif suffix_cfg and suffix_cfg != "nid":
+        # Treat as a field name — use its value if it exists in this note type
+        fields_map = {f['name']: note[f['name']] for f in note_type['flds']}
+        raw_field = fields_map.get(suffix_cfg, "")
+        if raw_field:
+            clean = re.sub('<[^>]+>', ' ', raw_field).strip()
+            clean = html.unescape(clean)
+            clean = re.sub(r'\s+', ' ', clean).strip()
+            if len(clean) > 16:
+                clean = clean[:16].rstrip()
+            suffix = sanitize_filename(clean) or suffix_cfg
+            return f"{sanitized_base}_{suffix}.md"
+        # Field not found/empty → fall through to nid
+    # "nid" or fallback
     return f"{sanitized_base}_{note.id}.md"
 
 def build_anki_state(col: Collection) -> Dict[str, Any]:
@@ -128,17 +147,22 @@ def build_anki_state(col: Collection) -> Dict[str, Any]:
 
     def is_excluded(deck_name: str) -> bool:
         for ex in excluded_decks:
-            if deck_name == ex or deck_name.startswith(ex + "::"):
+            # Exact match: exclude only this deck (children remain exportable).
+            if deck_name == ex:
+                return True
+            # Explicit subtree wildcard "Parent::" excludes the whole subtree,
+            # but a bare "Parent" no longer blocks its subdecks.
+            if ex.endswith("::") and deck_name.startswith(ex):
                 return True
         return False
 
     for deck in all_decks:
-        if is_excluded(deck.name):
-            continue
-            
+        # Always register the deck path so notes can resolve their location,
+        # even for excluded decks (their non-excluded children still need it).
         parts = deck.name.split("::")
         current_path_parts = []
         parent_id = None
+        excluded = is_excluded(deck.name)
         
         for i, part_name in enumerate(parts):
             sanitized_part_name = sanitize_filename(part_name)
@@ -152,17 +176,21 @@ def build_anki_state(col: Collection) -> Dict[str, Any]:
                 deck_map[current_deck_id] = sanitized_path
                 if parent_id is not None: 
                     deck_parents[current_deck_id] = parent_id
-                if sanitized_path not in anki_state:
+                # Only exportable (non-excluded) decks become folders in Obsidian.
+                if not excluded and sanitized_path not in anki_state:
                      anki_state[sanitized_path] = {
                         "anki_deck_id": current_deck_id, "anki_deck_name": part_name,
                         "sanitized_deck_name": sanitized_part_name, "notes": {},
                         "subdeck_paths": set(), "moc_filename": f"_{sanitized_part_name}_index.md"}
-                if parent_id is None: 
-                    anki_state["_root_"]["subdeck_paths"].add(sanitized_path)
-                else:
-                    parent_path = deck_map.get(parent_id)
-                    if parent_path and parent_path in anki_state: 
+                # Link subdecks only between non-excluded decks. If the parent is
+                # excluded (not in anki_state), promote the deck to the root level
+                # so it stays reachable in the MOC hierarchy.
+                if not excluded:
+                    parent_path = deck_map.get(parent_id) if parent_id is not None else None
+                    if parent_path and parent_path in anki_state:
                         anki_state[parent_path]["subdeck_paths"].add(sanitized_path)
+                    else:
+                        anki_state["_root_"]["subdeck_paths"].add(sanitized_path)
                 parent_id = current_deck_id
 
     note_ids = col.find_notes("")
@@ -180,7 +208,8 @@ def build_anki_state(col: Collection) -> Dict[str, Any]:
             card_ids = note.card_ids()
             if not card_ids: continue
             
-            deck_id = col.get_card(card_ids[0]).did
+            card0 = col.get_card(card_ids[0])
+            deck_id = card0.did
             deck_path = deck_map.get(deck_id)
 
             # Only process if deck hasn't been excluded
@@ -192,7 +221,15 @@ def build_anki_state(col: Collection) -> Dict[str, Any]:
                     "note_id": nid, "card_id": card_ids[0], "note_mod_time": note.mod,
                     "note_type_name": note_type['name'], "relevant_fields": relevant_fields,
                     "target_filename": target_filename, "required_images": get_note_media(note),
-                    "card_ids": card_ids
+                    "card_ids": card_ids,
+                    # Card scheduling metadata — read-only for now, will support write-back
+                    "tags": list(note.tags),
+                    "card_reps": card0.reps,
+                    "card_lapses": card0.lapses,
+                    "card_ivl": card0.ivl,
+                    "card_due": card0.due,
+                    "card_ease": card0.factor,
+                    "card_queue": card0.queue,
                 }
                 processed_note_ids.add(nid)
         except Exception:
